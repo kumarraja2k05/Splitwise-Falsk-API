@@ -25,7 +25,7 @@ def add_owner_details() -> dict:
     global owner_details
     req = request.get_json()
     balance_settled: bool = True
-    new_details = {**req,"balance_settled": balance_settled}
+    new_details = {**req,"balance_settled": balance_settled, "user_id": uuid.uuid4().int}
     owner_details = new_details
     return {"data":owner_details, "status":"Successful"}
 
@@ -36,20 +36,11 @@ def get_owner_details() -> dict:
 
 @app.post("/expenses")
 def add_expense() -> dict:
-    expense_details["expense_name"] = "groceries"
-    expense_details["expense_id"] = uuid.uuid4().hex
-    expense_details["expense_paid_by"] = input("Enter the paying user email Id: ")
-    expense_details["expense_amount"] = int(input("Enter the amount details: "))
-    expense_details["expense_settled"] = True if int(input("Enter 0 for not settled \nEnter 1 for settled: \n")) else False
-    borrowers_count: int = int(input("Enter the number of borrowers: "))
-    for i in range(borrowers_count):
-        borrowers_id.append(input("Enter the borrowers emaild id: "))
-        if borrowers_id[i] == owner_details["user_email"]:
-            borrowers_amount.append(-int(input(f"Enter the {borrowers_id[i]} amount: ")))
-        else:
-            borrowers_amount.append(int(input(f"Enter the {borrowers_id[i]} amount: ")))
-        borrowers_details[borrowers_id[i]] = borrowers_amount[i]
-    expense_details["borrowers_details"] = borrowers_details
+    global expense_details
+    req = request.get_json()
+    expense_id:str = uuid.uuid4().hex
+    new_details = {**req,"expense_id": expense_id}
+    expense_details = new_details
     return {"data: ":expense_details,"stauts": "Successful"}
 
 @app.get("/expenses")
@@ -58,9 +49,11 @@ def get_expense_details() -> dict:
 
 @app.get("/expenses/<string:expense_id>")
 def get_expense_user(expense_id):
-    if expense_details["expense_id"] == expense_id:
-        return {"data":{"expense_id":expense_id,"borrowers_details":expense_details["borrowers_details"]}, "status": "Successful"}
-    return {"meassage":"Item Not found", "stauts": "Failure"} , 404
+    try:
+        if expense_details["expense_id"] == expense_id:
+            return {"data":{"expense_id":expense_id,"borrowers_details":expense_details["borrowers_details"]}, "status": "Successful"}
+    except:
+        return {"meassage":"Item Not found", "stauts": "Failure"} , 404
 
 @app.get("/balances")
 def get_balance_of_owner() -> dict:
@@ -75,44 +68,44 @@ def get_balance_of_owner() -> dict:
 
 @app.post("/groups")
 def create_group() -> dict:
-    groups["group_name"] = input("Enter the group name: ")
-    groups["group_id"] = uuid.uuid4().int
-    groups["group_description"] = input("Enter the info for the new group: ")
-    groups["expense_id"] = expense_details["expense_id"]
-    group_member_count = int(input("Enter the group member count: "))
-    groups["group_members"] = list(input("Enter the email id of that user: ") for i in range(group_member_count))
+    global groups
+    req = request.get_json()
+    group_id:int = uuid.uuid4().int
+    expense_id:str = expense_details["expense_id"]
+    new_details = {**req,"expense_id": expense_id,"group_id":group_id}
+    groups = new_details
     return {"data":groups,"status": "Successful"}
 
 @app.get("/groups")
 def get_group_info() -> dict:
-    return {"Group Info": groups}
+    return {"data": groups, "status": "Successful"}
 
 @app.put("/expenses/<string:expenseId>")
 def update_expense(expenseId):
+    global expense_details
+    req = request.get_json()
     if expense_details["expense_id"] == expenseId:
-        expense_details["expense_amount"] = int(input("Enter the new amount to be adjusted: "))
-        if expense_details["expense_settled"] == False:
-            if input("Do you want to settle the expenses press y or else n: ").lower() == "y":
-                expense_details["expense_settled"] = True
+        expense_details = req
         return {"data": expense_details, "status":"Updated Successfuly"}
     return {"message":"Item Not found","status": "Failure"} , 404
 
 @app.delete("/expenses/<string:expenseId>")
 def delete_expense(expenseId):
-    # print("********* ",expense_details["expense_id"])
-    # if expense_details["expense_id"] == expenseId:
+    global expense_details
     try:
-        print("\nReached delete\n")
-        expense_details = {}
-        return {"message":"Item Deleted"}
-    except KeyError:
+        if expense_details["expense_id"] == expenseId:
+            del expense_details["expense_id"]
+            return {"message":"Item Deleted", "status": "Successful"}
+    except:
         return {"message":"Item Not found"},404
     
-@app.put("/owner/<string:ownerId>")
+@app.put("/owner/<int:ownerId>")
 def update_owner_details(ownerId):
-    if owner_details["user_email"] == ownerId:
-        print("\nReached update owner\n")
-        owner_details["user_name"] = input("Enter the new username: ")
+    global owner_details
+    req = request.get_json()
+    print("\nowner details: ",owner_details)
+    if owner_details["user_id"] == ownerId:
+        owner_details = {**req,"user_id":ownerId}
         return {"data": owner_details, "status":"Updated Successfuly"}
     
     return {"message":"Item Not found", "status": "Failure"} , 404
