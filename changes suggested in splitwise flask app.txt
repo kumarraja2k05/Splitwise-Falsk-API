@@ -1,0 +1,32 @@
+splitwise first api login api(login details with jwt token) 
+logout api()
+
+data should be in response not any other names
+
+add comments in the apis and (argument info , return response info )
+
+logging library
+
+dockerize app (at the end)
+
+move constant to seperate directory or constant files
+
+move the buissness logic shoudl be in different helper class
+
+implement the validation on request using json schema
+
+
+
+give the option of choosing the expense 
+
+add members in group and it could be showed in expense as we can choose in between
+
+decrease the expense id value 
+
+groupid: 1, 2,3 ,4
+
+
+donot use email_id for updating the owner details pass the new unique_id
+
+
+
