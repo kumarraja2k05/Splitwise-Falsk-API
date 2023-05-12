@@ -6,7 +6,7 @@ group_id = IdConstants.group_id.value
 expense_id = IdConstants.expense_id.value
 
 class Helper:
-    def inc_user_id():
+    def inc_user_id(self):
         global user_id
         user_id = user_id + 1
         logging.debug("New user id is: ",user_id)

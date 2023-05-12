@@ -1,32 +1,36 @@
-splitwise first api login api(login details with jwt token) 
+splitwise first api login api(login details with jwt token)  
 logout api()
 
-data should be in response not any other names
+data should be in response not any other names -> done
 
-add comments in the apis and (argument info , return response info )
+add comments in the apis and (argument info , return response info )  -> done
 
-logging library
+logging library -> done
 
-dockerize app (at the end)
+dockerize app (at the end) -> done
 
-move constant to seperate directory or constant files
+move constant to seperate directory or constant files -> done
 
-move the buissness logic shoudl be in different helper class
+move the buissness logic shoudl be in different helper class -> done
 
-implement the validation on request using json schema
-
-
-
-give the option of choosing the expense 
-
-add members in group and it could be showed in expense as we can choose in between
-
-decrease the expense id value 
-
-groupid: 1, 2,3 ,4
+implement the validation on request using json schema 
 
 
-donot use email_id for updating the owner details pass the new unique_id
 
+give the option of choosing the expense -> done
+
+add members in group and it could be showed in expense as we can choose in between -> done
+
+decrease the expense id value -> done
+
+groupid: 1, 2,3 ,4 ->done
+
+
+donot use email_id for updating the owner details pass the new unique_id -> done
+
+
+
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4Mzg4MjA0MSwianRpIjoiZjNhMDg3MGEtZjI4Mi00ZDZkLTg2MTAtNmQwZGUxZTQwMjFkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InJhamEiLCJuYmYiOjE2ODM4ODIwNDEsImV4cCI6MTY4Mzg4Mjk0MX0.Z5FZ7aTCOWxjxnN49i9oUptwtGMys11a03Ehno7WRsY
 
 

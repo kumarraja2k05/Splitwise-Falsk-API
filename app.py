@@ -1,8 +1,27 @@
-from flask import Flask,request
+from flask import Flask,request,jsonify
 from helper.buissness_logic import Helper
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 import logging
+from constants import IdConstants
+from flask_json_schema import JsonSchema
+
+# owner_schema = {
+#     "type": "object",
+#     "properties": {
+#         "username": {"type": "string"},
+#         "password": {"type": "number"},
+#         "user_email": {"type": "number"}
+#     },
+#     "required": ["username","password"]
+# }
 
 app = Flask(__name__)
+logging.error(f"Secret Key is: {IdConstants.SECRET_KEY.value}")
+app.config['JWT_SECRET_KEY'] = IdConstants.SECRET_KEY.value
+jwt = JWTManager(app)
 
 owner_details: dict = {}
 expense_details: dict = {}
@@ -10,47 +29,65 @@ balance_details:dict = {}
 groups:dict = {}
 borrowers_details:dict = {}
 
-
+# This endpoint represents the homepage of the splitwise app
 @app.route("/")
 def home_page() -> str:
-    # This endpoint represents the homepage of the splitwise app
     return f"Welcome to SplitWise :-)"
 
-
-@app.post("/owner")
-def add_owner_details() -> dict:
-    # Here we are creating the owner account with respective details of the owner
-    global owner_details,user_id      # global is used for making the value of local variable accessible outside the method
+# Here we are creating the owner account with respective details of the owner
+@app.route("/login", methods=["POST"])
+def login():
+    global owner_details,access_token      # global is used for making the value of local variable accessible outside the method
     req = request.get_json()
-    logging.info('Getting response from POST method using request.get_json() library')
-    new_details = {**req,"balance_settled": True, "user_id": Helper.inc_user_id()}
+    # val = validate(instance=req, schema=owner_schema)
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+    if username != "raja" or password != "raja":
+        return {"msg": "Bad username or password"} ,401
+    new_details = {**req,"balance_settled": True, "user_id": Helper().inc_user_id()}
     logging.debug(f'Response recieved from POST request is: {new_details}')
     owner_details = new_details
-    return {"data":owner_details, "status":"Successful"}
+    access_token = create_access_token(identity=username)
+    logging.debug("access token recieved: ", access_token)
+    return {"access_token":access_token, "status":"Succesful"}
 
+@app.route("/logout", methods=["POST"])
+def logout():
+    access_token = create_access_token(identity=None)
+    logging.debug("access token recieved: ", access_token)
+    return {"status":"Succesful"}
+
+# Here we are getting the owner details
+# Protect a route with jwt_required, which will kick out requests
+# without a valid JWT present.
 @app.get("/owner")
+@jwt_required(refresh=False)
 def get_owner_details() -> dict:
-    # Here we are getting the owner details
-    return {"data":owner_details, "status":"Successful"}
+    current_user = get_jwt_identity()
+    return {"data":owner_details,"logged_in_as":current_user,"status": "Successful"}
 
+# Here we are creating new groups and adding the group members
 @app.post("/groups")
+@jwt_required(refresh=False)
 def create_group() -> dict:
-    # Here we are creating new groups and adding the group members
     global groups, group_id
     req = request.get_json()
+    logging.info('Getting response from POST method using request.get_json() library')
     new_details = {**req,"group_id":Helper.inc_group_id()}
     logging.debug(f'Response recieved from POST request is: {new_details}')
     groups = new_details
     return {"data":groups,"status": "Successful"}
 
+# Here we are fetching the group details
 @app.get("/groups")
+@jwt_required(refresh=False)
 def get_group_info() -> dict:
-    # Here we are fetching the group details
     return {"data": groups, "status": "Successful"}
 
+# Here we are creating new expenses with their unique expense ID
 @app.post("/expenses")
+@jwt_required(refresh=False)
 def add_expense() -> dict:
-    # Here we are creating new expenses with their unique expense ID
     global expense_details, expense_id
     req = request.get_json()
     logging.warning('Here we have only considered equal contribution case')
@@ -61,14 +98,16 @@ def add_expense() -> dict:
     expense_details = new_details
     return {"data: ":expense_details,"stauts": "Successful"}
 
+# Here we are fetching the newly created expense
 @app.get("/expenses")
+@jwt_required(refresh=False)
 def get_expense_details() -> dict:
-    # Here we are fetching the newly created expense
     return {"data: ":expense_details, "stauts": "Successful"}
 
+# If we want to fetch a particular expense form a bunch of expenses we can do it by using its unique expense Id
 @app.get("/expenses/<int:expense_id>")
+@jwt_required(refresh=False)
 def get_expense_user(expense_id):
-    # If we want to fetch a particular expense form a bunch of expenses we can do it by using its unique expense Id
     global expense_details
     try:
         if expense_details["expense_id"] == expense_id:
@@ -81,9 +120,10 @@ def get_expense_user(expense_id):
         logging.error('Exception has occured')
         return {"meassage":"Item Not found", "stauts": "Failure"} , 404
 
+# Here we are fetching each user balnace with the owner
 @app.get("/balances")
+@jwt_required(refresh=False)
 def get_balance_of_owner() -> dict:
-    # Here we are fetching each user balnace with the owner
     owner_id = owner_details["user_email"]
     new_balance_details = expense_details["borrowers_details"]
     if owner_details["user_email"] in list(expense_details["borrowers_details"].keys()):
@@ -94,9 +134,10 @@ def get_balance_of_owner() -> dict:
     return {"data": balance_details, "status":"Successfull"}
 
 
+# Here we are updating a particular expense by using its expenseId as arguments
 @app.put("/expenses/<int:expenseId>")
+@jwt_required(refresh=False)
 def update_expense(expenseId):
-    # Here we are updating a particular expense by using its expenseId as arguments
     global expense_details
     req = request.get_json()
     if expense_details["expense_id"] == expenseId:
@@ -105,9 +146,10 @@ def update_expense(expenseId):
         return {"data": expense_details, "status":"Updated Successfuly"}
     return {"message":"Item Not found","status": "Failure"} , 404
 
+# Delete a particular expense by using its expenseId as arguments
 @app.delete("/expenses/<int:expenseId>")
+@jwt_required(refresh=False)
 def delete_expense(expenseId):
-    # Delete a particular expense by using its expenseId as arguments
     global expense_details
     try:
         if expense_details["expense_id"] == expenseId:
@@ -122,9 +164,10 @@ def delete_expense(expenseId):
         logging.error('Exception has occured')
         return {"message":"Item Not found"}, 404
     
+# Update the owner details by using its ownerId as arguments
 @app.put("/owner/<int:ownerId>")
+@jwt_required(refresh=False)
 def update_owner_details(ownerId):
-    # Update the owner details by using its ownerId as arguments
     global owner_details
     req = request.get_json()
     if owner_details["user_id"] == ownerId:
