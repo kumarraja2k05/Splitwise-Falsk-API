@@ -1,0 +1,8 @@
+{
+    "type": "object",
+    "properties": {
+        "group_members": {"type": "array"},
+        "group_name": {"type": "string"}
+    },
+    "required": ["group_members"]
+}

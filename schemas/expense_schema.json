@@ -1,0 +1,10 @@
+{
+    "type": "object",
+    "properties": {
+        "expense_amount": {"type": "number"},
+        "expense_paid_by": {"type": "string"},
+        "expense_settled": {"type": "boolean"},
+        "expense_name": {"type": "string"}
+    },
+    "required": ["expense_amount","expense_paid_by","expense_settled"]
+}

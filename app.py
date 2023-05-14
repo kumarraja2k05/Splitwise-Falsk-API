@@ -8,17 +8,9 @@ import logging
 from constants import IdConstants
 from flask_json_schema import JsonSchema
 
-# owner_schema = {
-#     "type": "object",
-#     "properties": {
-#         "username": {"type": "string"},
-#         "password": {"type": "number"},
-#         "user_email": {"type": "number"}
-#     },
-#     "required": ["username","password"]
-# }
-
 app = Flask(__name__)
+schema = JsonSchema(app)
+
 logging.error(f"Secret Key is: {IdConstants.SECRET_KEY.value}")
 app.config['JWT_SECRET_KEY'] = IdConstants.SECRET_KEY.value
 jwt = JWTManager(app)
@@ -36,10 +28,10 @@ def home_page() -> str:
 
 # Here we are creating the owner account with respective details of the owner
 @app.route("/login", methods=["POST"])
+@schema.validate(Helper().load_owner_json())
 def login():
     global owner_details,access_token      # global is used for making the value of local variable accessible outside the method
     req = request.get_json()
-    # val = validate(instance=req, schema=owner_schema)
     username = request.json.get("username", None)
     password = request.json.get("password", None)
     if username != "raja" or password != "raja":
@@ -49,7 +41,7 @@ def login():
     owner_details = new_details
     access_token = create_access_token(identity=username)
     logging.debug("access token recieved: ", access_token)
-    return {"access_token":access_token, "status":"Succesful"}
+    return {"access_token":access_token, "status":"Successful"}
 
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -68,12 +60,13 @@ def get_owner_details() -> dict:
 
 # Here we are creating new groups and adding the group members
 @app.post("/groups")
+@schema.validate(Helper().load_group_json())
 @jwt_required(refresh=False)
 def create_group() -> dict:
     global groups, group_id
     req = request.get_json()
     logging.info('Getting response from POST method using request.get_json() library')
-    new_details = {**req,"group_id":Helper.inc_group_id()}
+    new_details = {**req,"group_id":Helper().inc_group_id()}
     logging.debug(f'Response recieved from POST request is: {new_details}')
     groups = new_details
     return {"data":groups,"status": "Successful"}
@@ -86,6 +79,7 @@ def get_group_info() -> dict:
 
 # Here we are creating new expenses with their unique expense ID
 @app.post("/expenses")
+@schema.validate(Helper().load_expense_json())
 @jwt_required(refresh=False)
 def add_expense() -> dict:
     global expense_details, expense_id
@@ -93,7 +87,7 @@ def add_expense() -> dict:
     logging.warning('Here we have only considered equal contribution case')
     borrowers_details = Helper.expense_management(req["expense_amount"],groups["group_members"])
     logging.info(f'Group members details are fetched form the groups and they are considered as borrowers with values: {borrowers_details}')
-    new_details = {**req,"expense_id": Helper.inc_expense_id(),"borrowers_details": borrowers_details, "group_id": groups["group_id"]}
+    new_details = {**req,"expense_id": Helper().inc_expense_id(),"borrowers_details": borrowers_details, "group_id": groups["group_id"]}
     logging.debug(f'Response recieved from POST request is: {new_details}')
     expense_details = new_details
     return {"data: ":expense_details,"stauts": "Successful"}
