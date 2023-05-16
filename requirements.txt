@@ -11,6 +11,8 @@ flask-expects-json==1.7.0
 Flask-json-schema==0.0.5
 Flask-JsonSchemaValidator==0.3.0
 Flask-JWT-Extended==4.4.4
+Flask-SQLAlchemy==3.0.3
+greenlet==2.0.2
 idna==3.4
 itsdangerous==2.1.2
 Jinja2==3.1.2
@@ -21,5 +23,7 @@ pycparser==2.21
 PyJWT==2.7.0
 pyrsistent==0.19.3
 requests==2.30.0
+SQLAlchemy==2.0.13
+typing_extensions==4.5.0
 urllib3==2.0.2
 Werkzeug==2.3.4
